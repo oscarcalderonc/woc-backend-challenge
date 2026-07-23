@@ -32,8 +32,6 @@ public enum CharacterError
     CharacterNotFound
 }
 
-
-
 public record ApplyDamageResult(Character? Character, ApplyDamageError Error);
 public record HealResult(Character? Character, HealError Error);
 public record TemporaryHitPointsResult(Character? Character, TemporaryHitPointsError Error);

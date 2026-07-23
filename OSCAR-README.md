@@ -66,3 +66,19 @@ Routes are currently defined directly in `Program.cs`:
 ```csharp
 app.MapGet("/api/ping", () => Results.Ok(new { message = "pong" }));
 ```
+## What's missing?
+
+I was told I need to send this ASAP as the recruiting process has to be finished
+soon (end of month); also I already had planned vacations so I didn't count with 
+enough time to elaborate more on my proposal (a few hours after work).
+Some of the things I missed that are nice to have:
+- Currently works with a hardcoded UUID, it would be better to have some button
+to initialize the game where it restarts the character with a generated UUID
+- Allow creating multiple players, or a view to create a new player specifying
+the stats
+- When the character dies, either switch it with another character or finish the
+game, allowing you to start a new one
+- Having a seeder with multiple characters, and when a game starts, choose your
+character
+- Adding logic around the stats of the character in how it affects attack and 
+defense, or modifying other parameters like causing a critical hit, random miss, etc.
