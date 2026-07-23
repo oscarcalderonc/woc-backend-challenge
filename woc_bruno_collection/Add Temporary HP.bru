@@ -1,0 +1,22 @@
+meta {
+  name: Add Temporary HP
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{base_url}}/character/{{character_id}}/temp_hit_points
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "temporaryHitPoints": 15
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

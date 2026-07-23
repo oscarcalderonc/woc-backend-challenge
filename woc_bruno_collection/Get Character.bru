@@ -1,0 +1,23 @@
+meta {
+  name: Get Character
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/character/{{character_id}}
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "hitPoints": 4,
+    "damageType": "Poison"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

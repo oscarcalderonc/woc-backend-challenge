@@ -1,0 +1,348 @@
+openapi: 3.0.3
+info:
+  title: HP API
+  description: >
+    Manages a player character's Hit Points -- dealing typed damage
+    (considering resistances/immunities), healing, and adding temporary
+    Hit Points. Character data is seeded from briv.json at startup and held
+    in memory.
+  version: "0.1"
+servers:
+  - url: http://localhost:5080
+
+paths:
+  /api/healthz:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: pass
+                  version:
+                    type: string
+                    example: "0.1"
+                  uptime:
+                    type: integer
+                    example: 86400
+
+  /api/character/{characterId}:
+    get:
+      summary: Get a character
+      parameters:
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: Character found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+        "404":
+          description: Character not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterNotFoundError"
+
+  /api/character/{characterId}/damage:
+    post:
+      summary: Deal damage to a character
+      description: >
+        Applies resistance (half damage) or immunity (no damage) based on
+        the character's defenses before subtracting from temporary HP then
+        HP.
+      parameters:
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hitPoints, damageType]
+              properties:
+                hitPoints:
+                  type: integer
+                  description: Damage amount rolled, must be positive.
+                  example: 14
+                damageType:
+                  $ref: "#/components/schemas/DamageType"
+      responses:
+        "200":
+          description: Damage applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: damage_applied
+                  characterId:
+                    type: string
+                  hitPoints:
+                    type: integer
+                  damageType:
+                    type: string
+        "400":
+          description: Invalid hit points or damage type
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      error:
+                        type: string
+                        example: invalid_hit_points
+                      hitPoints:
+                        type: integer
+                  - type: object
+                    properties:
+                      error:
+                        type: string
+                        example: invalid_damage_type
+                      damageType:
+                        type: string
+        "404":
+          description: Character not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterNotFoundError"
+
+  /api/character/{characterId}/heal:
+    post:
+      summary: Heal a character
+      description: Increases HP, capped at the character's base (max) HP.
+      parameters:
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [healPoints]
+              properties:
+                healPoints:
+                  type: integer
+                  description: Amount to heal, must be positive.
+                  example: 5
+      responses:
+        "200":
+          description: Heal applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: heal_applied
+                  characterId:
+                    type: string
+                  healPoints:
+                    type: integer
+        "400":
+          description: healPoints was not positive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: invalid_heal_points
+                  healPoints:
+                    type: integer
+        "404":
+          description: Character not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterNotFoundError"
+
+  /api/character/{characterId}/temp_hit_points:
+    post:
+      summary: Add temporary Hit Points to a character
+      description: >
+        NOTE: current implementation adds to the existing temporary HP
+        value. The challenge spec calls for taking the higher of the two
+        instead of stacking -- this is a known, not-yet-addressed gap.
+      parameters:
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [temporaryHitPoints]
+              properties:
+                temporaryHitPoints:
+                  type: integer
+                  description: Amount to add, must be positive.
+                  example: 10
+      responses:
+        "200":
+          description: Temporary HP added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: temporary_hit_points_added
+                  characterId:
+                    type: string
+                  temporaryHitPoints:
+                    type: integer
+        "400":
+          description: temporaryHitPoints was not positive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: invalid_temporary_hit_points
+                  temporaryHitPoints:
+                    type: integer
+        "404":
+          description: Character not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterNotFoundError"
+
+components:
+  parameters:
+    CharacterId:
+      name: characterId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: >
+        UUID assigned to the character at load time. There is currently no
+        endpoint to enumerate/discover it from outside the process.
+
+  schemas:
+    DamageType:
+      type: string
+      description: Accepted case-insensitively on input; returned PascalCase on output.
+      enum:
+        - Bludgeoning
+        - Piercing
+        - Slashing
+        - Fire
+        - Cold
+        - Acid
+        - Thunder
+        - Lightning
+        - Poison
+        - Radiant
+        - Necrotic
+        - Psychic
+        - Force
+
+    DefenseType:
+      type: string
+      enum: [Resistance, Immunity]
+      description: >
+        Resistance halves incoming damage of the matching type; Immunity
+        negates it entirely.
+
+    CharacterStatus:
+      type: string
+      enum: [Alive, Dead]
+
+    CharacterNotFoundError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: character_not_found
+        characterId:
+          type: string
+
+    Character:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          $ref: "#/components/schemas/CharacterStatus"
+        name:
+          type: string
+        level:
+          type: integer
+        hitPoints:
+          type: integer
+          description: Current HP.
+        maxHitPoints:
+          type: integer
+          description: Maximum HP the character can have.
+        temporaryHitPoints:
+          type: integer
+        classes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              hitDiceValue:
+                type: integer
+              classLevel:
+                type: integer
+        stats:
+          type: object
+          properties:
+            strength:
+              type: integer
+            dexterity:
+              type: integer
+            constitution:
+              type: integer
+            intelligence:
+              type: integer
+            wisdom:
+              type: integer
+            charisma:
+              type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              modifier:
+                type: object
+                properties:
+                  affectedObject:
+                    type: string
+                  affectedValue:
+                    type: string
+                  value:
+                    type: integer
+        defenses:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                $ref: "#/components/schemas/DamageType"
+              defense:
+                $ref: "#/components/schemas/DefenseType"

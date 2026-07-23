@@ -1,0 +1,22 @@
+meta {
+  name: Heal
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/character/{{character_id}}/heal
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "healPoints": 39
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

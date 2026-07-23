@@ -1,0 +1,23 @@
+meta {
+  name: Make damage
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{base_url}}/character/{{character_id}}/damage
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "hitPoints": 44,
+    "damageType": "Poison"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
