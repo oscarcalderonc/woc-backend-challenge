@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Node / React frontend
+node_modules/
+dist/
+build/
+.vite/
+*.local
+
+# Editor / OS
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+
+# Env
+.env
+.env.local
