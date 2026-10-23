@@ -63,3 +63,15 @@ across all three forms, and checked layout at 606px and 1400px widths.
 **Outcome:** Accepted. Working end-to-end against the live backend as of
 this session; candidate confirmed CORS fix and the app was verified
 afterward with the character move applied.
+
+## [turn 3 — replace default frontend README with project docs]
+**Asked:** Make any small change and open a PR, to test that the assistant can
+work on this repo and create a pull request end to end.
+**Did:** Replaced the stock Vite template text in `frontend/README.md` with
+project-specific docs: prerequisites, how to run, npm scripts, the
+`VITE_API_BASE_URL` setting, the hardcoded `CHARACTER_ID` limitation, the
+`src/` structure, and behavior notes (4s polling, accessibility, theming).
+Checked each claim against `package.json`, `src/api/config.ts`, and the
+hooks/components. Stayed inside `/frontend` plus this log, per `AGENTS.md`;
+no backend files touched.
+**Outcome:** Pending review.

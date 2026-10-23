@@ -1,50 +1,70 @@
-# React + TypeScript + Vite
+# HP Tracker — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript (Vite) UI for the character HP API. It shows a character's
+details and HP, and lets you deal damage, heal, and set temporary HP.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18+ and npm
+- The backend API running (default `http://localhost:5080`). See
+  [`../OSCAR-README.md`](../OSCAR-README.md) for how to start it.
 
-## Expanding the ESLint configuration
+## Running it
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm install     # first time only
+npm run dev     # dev server at http://localhost:5173
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Scripts
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+| Script            | What it does                                |
+| ----------------- | ------------------------------------------- |
+| `npm run dev`     | Start the Vite dev server with HMR          |
+| `npm run build`   | Type-check (`tsc -b`) and build for production |
+| `npm run lint`    | Run ESLint                                  |
+| `npm run preview` | Serve the production build locally          |
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+## Configuration
+
+| Variable            | Default                 | Purpose                  |
+| ------------------- | ----------------------- | ------------------------ |
+| `VITE_API_BASE_URL` | `http://localhost:5080` | Base URL of the HP API   |
+
+Set it in `frontend/.env.local`, for example:
+
+```bash
+VITE_API_BASE_URL=http://localhost:5080
 ```
+
+The backend must allow CORS from the frontend origin
+(`http://localhost:5173` in dev), otherwise the browser blocks the requests.
+
+### Known limitation: hardcoded character id
+
+The API assigns each character a UUID at load time and exposes no endpoint to
+discover it. `src/api/config.ts` therefore hardcodes `CHARACTER_ID`. If the
+backend restarts and re-seeds with a new id, update that constant or the
+character will fail to load and the UI will show an error.
+
+## Structure
+
+```
+src/
+  api/          Typed API client, config, and response types
+  hooks/        useCharacter (polling), useAsyncAction (pending/error state for form actions)
+  components/
+    CharacterCard/   Name, level/classes, status, defenses; composes the rest
+    HpMeter/         HP bar with status label (Healthy/Wounded/Critical/Down)
+    StatGrid/        Ability scores and modifiers
+    ActionPanel/     Damage, Heal, and Temporary HP forms
+```
+
+## Behavior notes
+
+- **Live updates:** `useCharacter` polls the API every 4 seconds and refetches
+  immediately after every action.
+- **Accessibility:** forms use labeled inputs, errors use `role="alert"`, the
+  HP meter exposes `role="progressbar"`, and status is shown with text as well
+  as color.
+- **Theming:** light and dark themes follow `prefers-color-scheme`.
